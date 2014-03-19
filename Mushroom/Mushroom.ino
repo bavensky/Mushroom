@@ -1,14 +1,19 @@
-
+#include <Wire.h>
+#include "RTClib.h"
 #include <DHT22.h>
 #include <LiquidCrystal.h>
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 #include <stdio.h>
-#define DHT22_PIN1 11
-#define DHT22_PIN2 12
-#define DHT22_PIN3 13
+#define DHT22_PIN1 A1
+#define DHT22_PIN2 A2
+#define DHT22_PIN3 A3
 DHT22 myDHT1(DHT22_PIN1);
 DHT22 myDHT2(DHT22_PIN2);
 DHT22 myDHT3(DHT22_PIN3);
+
+RTC_DS1307 rtc;
+int year0; int month0; int day0; int hour0; int minute0; int second0;
+
 int temp1=0,humi1=0,temp2=0,humi2=0,temp3=0,humi3=0;
 
 int lcd_key     = 0;
@@ -20,31 +25,81 @@ int adc_key_in  = 0;
 #define btnSELECT 4
 #define btnNONE   5
 
-int heater=3,water=2,i=0;
+int heater=2,water=1,fan=0,i=0;
+
+int three=0,threehour=1,m=0;
 
 void setup()
 {
- Serial.begin(9600);  lcd.begin(16, 2);  
- pinMode(heater, OUTPUT); pinMode(water, OUTPUT); 
+ lcd.begin(16, 2);  
+ Wire.begin();rtc.begin();
+ pinMode(heater, OUTPUT); pinMode(water, OUTPUT); pinMode(fan, OUTPUT); 
+ 
  lcd.setCursor(0,0);
- lcd.print("  Mushroom War  "); 
- delay(2000);
+ lcd.print("RMUTL Electronic");delay(2000);
+ lcd.setCursor(0,0);
+ lcd.print("    Mushroom    ");
+ delay(1000);
+ 
 }
  
 void loop()
 {
-  dht();
-  
- 
-}
+  i=0; 
+  key();
 
-void check()
+
+}
+void mode1()
 {
-    if(humi1 != humi2)
+  lcd.setCursor(0,1);lcd.print("Mode 1 Disinfect");delay(2000);
+  time();threehour = threehour+hour0;
+  if(threehour < 23){i=8;}
+  if(threehour > 23){three=threehour-24; i=9;}
+  
+  while(i==8)
+  {
+    dht();
+    lcd.setCursor(0,0);lcd.print("Mode1 Disinfect ");
+    lcd.setCursor(0,1);lcd.print("Temp:");lcd.print(temp1);lcd.print("C  ");lcd.print(threehour);lcd.print(":");lcd.print(minute0);lcd.print("m");
+    
+    if(temp1 <= 80 )
+    {  digitalWrite(heater ,HIGH);  }
+    if(temp1 >= 81 )
+    {  digitalWrite(heater ,LOW);  }
+    if(threehour == hour0){ digitalWrite(heater ,LOW);digitalWrite(water ,LOW);digitalWrite(fan ,LOW); i=7;}
+  }
+  
+  while(i==9)
+  {
+    dht();
+    lcd.setCursor(0,0);lcd.print("Mode1  Disinfect");
+    lcd.setCursor(0,1);lcd.print("Temp:");lcd.print(temp1);lcd.print("C  ");lcd.print(three);lcd.print(":");lcd.print(minute0);lcd.print("m");
+    
+    if(temp1 <= 80 )
+    {  digitalWrite(heater ,HIGH);  }
+    if(temp1 >= 81 )
+    {  digitalWrite(heater ,LOW);  }
+    if(three == hour0){ digitalWrite(heater ,LOW);digitalWrite(water ,LOW);digitalWrite(fan ,LOW); i=7;}
+  }
+  
+  while(i==7)
+  {
+    dht();
+    lcd.setCursor(0,0);lcd.print("Mode1  Disinfect");
+    lcd.setCursor(0,1);lcd.print("  End Disinfect ");delay(2000);
+    lcd.setCursor(0,1);lcd.print("  TEMP :");lcd.print(temp3);lcd.print("C   ");
+    if(temp3 < 29){i=0;}
+  }
+  
+}
+void mode2()
+{
+  lcd.setCursor(0,1);lcd.print(" Mode 2 Working ");delay(2000);i=0;
+  /*if(humi1 != humi2)
   {
     i=1;Serial.println(" Begin !!!");delay(1000);
   }
-  
   while(i == 1)
   {
     dht();
@@ -58,9 +113,16 @@ void check()
     {digitalWrite(water, LOW);}
     if(temp3>31 || humi3 >81)
     {Serial.print(" END !!!");digitalWrite(heater, LOW);digitalWrite(water, LOW); i=0; }
-  }  
+  } 
+  */
 }
-
+void time()
+{
+  DateTime now = rtc.now(); 
+  year0 = now.year(); month0 = now.month();   day0 = now.day();
+  hour0 = now.hour(); minute0 = now.minute(); second0 = now.second();
+  DateTime future (now.unixtime() + 7 * 86400L + 30);
+}
 void dht()
 { 
   DHT22_ERROR_t errorCode;
@@ -70,13 +132,6 @@ void dht()
   temp1 = myDHT1.getTemperatureC();humi1 = myDHT1.getHumidity();
   temp2 = myDHT2.getTemperatureC();humi2 = myDHT2.getHumidity();
   temp3 = myDHT3.getTemperatureC();humi3 = myDHT3.getHumidity();
-  lcd.setCursor(0,1);
-  lcd.print(temp1);lcd.print("C");lcd.print(humi1);lcd.print("%");
-  lcd.setCursor(10,1);
-  lcd.print(temp2);lcd.print("C");lcd.print(humi2);lcd.print("%");
-  Serial.print(temp1);Serial.print(" / ");Serial.print(humi1);Serial.print("   ");
-  Serial.print(temp2);Serial.print(" / ");Serial.print(humi2);Serial.print("   ");
-  Serial.print(temp3);Serial.print(" / ");Serial.println(humi3);
 }
 
 int read_LCD_buttons()
@@ -91,9 +146,29 @@ int read_LCD_buttons()
  return btnNONE; 
 }
 void key()
-{
-  lcd.setCursor(0,1);            
-  lcd_key = read_LCD_buttons();  
+{ 
+    i=1;
+    while(i==1)
+    {
+      lcd.setCursor(0,1);lcd.print(">Mode1    Mode2 ");  
+      lcd_key = read_LCD_buttons();   
+      if( lcd_key==btnSELECT)
+      {mode1();i=0;}
+      if(lcd_key==btnRIGHT)
+      {i=2;}
+    }
+    while(i==2)
+    {
+      lcd.setCursor(0,1);lcd.print(" Mode1   >Mode2 "); 
+      lcd_key = read_LCD_buttons();   
+      if(lcd_key==btnSELECT)
+      {mode2();i=0;}
+      if(lcd_key==btnLEFT)
+      {i=1;}
+    }
+}
+  
+  /*
   if( lcd_key==btnRIGHT)
   {lcd.print("RIGHT ");}
   if( lcd_key==btnLEFT)
@@ -106,6 +181,7 @@ void key()
   {lcd.print("SELECT");}
   if( lcd_key==btnNONE)
   {lcd.print("NONE  ");}
-}
+  */
+
 
 
