@@ -25,9 +25,9 @@ int adc_key_in  = 0;
 #define btnSELECT 4
 #define btnNONE   5
 
-int heater=2,water=1,fan=0,i=0;
+int heater=2,water=1,fan=0,i=0,s=0;
 
-int three=0,threehour=1,m=0;
+int three,threehour,minutemode,minutes,m=0;
 
 void setup()
 {
@@ -45,54 +45,98 @@ void setup()
  
 void loop()
 {
-  i=0; 
+  lcd.setCursor(0,0);
+  lcd.print("    Mushroom    ");
+  i=0;
+  time();
   key();
-
-
+  choose();
+}
+void choose()
+{
+  while(s==3)
+  {
+    s=1;
+    while(s==1)
+    {
+      lcd.setCursor(0,1);lcd.print(">Start    Time  ");  
+      lcd_key = read_LCD_buttons();   
+      if( lcd_key==btnSELECT)
+      {mode1();}
+      if(lcd_key==btnRIGHT)
+      {s=2;}
+    }
+    while(s==2)
+    {                              
+      lcd.setCursor(0,1);lcd.print(" Start   >Time  "); 
+      lcd_key = read_LCD_buttons();   
+      if(lcd_key==btnSELECT)
+      {lcd.setCursor(0,1);lcd.print("      TIME     ");}
+      if(lcd_key==btnLEFT)
+      {s=1;}
+    } 
+  }
 }
 void mode1()
-{
+{      
+  while(i=6)
+  {
+  three=0;threehour=0;minutemode=0;minutes=0;
+  threehour = 0;
+  minutemode = 5;
   lcd.setCursor(0,1);lcd.print("Mode 1 Disinfect");delay(2000);
-  time();threehour = threehour+hour0;
-  if(threehour < 23){i=8;}
-  if(threehour > 23){three=threehour-24; i=9;}
+  time();threehour = threehour+hour0;minutemode = minutemode+minute0;
+  if(threehour < 23|| minutemode < 59){i=8;}
+  if(threehour > 23 || minutemode > 59)
+      {
+        if(threehour > 23){ three = threehour - 24;} 
+        if(minutemode > 59){ minutes = minutemode - 60; three = threehour + 1;}
+        i=9;
+      }
   
   while(i==8)
   {
-    dht();
-    lcd.setCursor(0,0);lcd.print("Mode1 Disinfect ");
-    lcd.setCursor(0,1);lcd.print("Temp:");lcd.print(temp1);lcd.print("C  ");lcd.print(threehour);lcd.print(":");lcd.print(minute0);lcd.print("m");
+    dht();time();
+    lcd.setCursor(0,0);lcd.print("Mode 1 Disinfect");
+    lcd.setCursor(0,1);lcd.print("Temp:");lcd.print(temp1);lcd.print("C  ");lcd.print(threehour);lcd.print(":");lcd.print(minutemode);lcd.print("m");
     
     if(temp1 <= 80 )
     {  digitalWrite(heater ,HIGH);  }
     if(temp1 >= 81 )
     {  digitalWrite(heater ,LOW);  }
-    if(threehour == hour0){ digitalWrite(heater ,LOW);digitalWrite(water ,LOW);digitalWrite(fan ,LOW); i=7;}
+    if(threehour == hour0 && minutemode == minute0)
+    { digitalWrite(heater ,LOW);digitalWrite(water ,LOW);digitalWrite(fan ,LOW); 
+      lcd.setCursor(0,1);lcd.print("  End Disinfect ");delay(2000);i=7;}
   }
   
   while(i==9)
   {
-    dht();
-    lcd.setCursor(0,0);lcd.print("Mode1  Disinfect");
-    lcd.setCursor(0,1);lcd.print("Temp:");lcd.print(temp1);lcd.print("C  ");lcd.print(three);lcd.print(":");lcd.print(minute0);lcd.print("m");
+    dht();time();
+    lcd.setCursor(0,0);lcd.print("Mode 1  Disinfect");
+    lcd.setCursor(0,1);lcd.print("Temp:");lcd.print(temp1);lcd.print("C  ");lcd.print(three);lcd.print(":");lcd.print(minutes);lcd.print("m");
     
     if(temp1 <= 80 )
     {  digitalWrite(heater ,HIGH);  }
     if(temp1 >= 81 )
     {  digitalWrite(heater ,LOW);  }
-    if(three == hour0){ digitalWrite(heater ,LOW);digitalWrite(water ,LOW);digitalWrite(fan ,LOW); i=7;}
+    if(three == hour0 && minutes == minute0)
+    { digitalWrite(heater ,LOW);digitalWrite(water ,LOW);digitalWrite(fan ,LOW); 
+      lcd.setCursor(0,1);lcd.print(" End Disinfect  ");delay(2000);i=7;}
   }
   
   while(i==7)
   {
     dht();
     lcd.setCursor(0,0);lcd.print("Mode1  Disinfect");
-    lcd.setCursor(0,1);lcd.print("  End Disinfect ");delay(2000);
-    lcd.setCursor(0,1);lcd.print("  TEMP :");lcd.print(temp3);lcd.print("C   ");
-    if(temp3 < 29){i=0;}
+    lcd.setCursor(0,1);lcd.print("   TEMP :");lcd.print(temp1);lcd.print("C    ");
+    lcd_key = read_LCD_buttons(); 
+    if(lcd_key==btnSELECT)
+    {i=0;delay(2000);}
+  }
   }
   
 }
+
 void mode2()
 {
   lcd.setCursor(0,1);lcd.print(" Mode 2 Working ");delay(2000);i=0;
@@ -122,6 +166,7 @@ void time()
   year0 = now.year(); month0 = now.month();   day0 = now.day();
   hour0 = now.hour(); minute0 = now.minute(); second0 = now.second();
   DateTime future (now.unixtime() + 7 * 86400L + 30);
+  
 }
 void dht()
 { 
@@ -153,7 +198,7 @@ void key()
       lcd.setCursor(0,1);lcd.print(">Mode1    Mode2 ");  
       lcd_key = read_LCD_buttons();   
       if( lcd_key==btnSELECT)
-      {mode1();i=0;}
+      {s=3;choose();i=0;}
       if(lcd_key==btnRIGHT)
       {i=2;}
     }
