@@ -4,11 +4,10 @@
  * Board    : Arduino UNO                                                      *
  * Shield   : [DFROBOT] Arduino LCD Keypad Shield                              *
  * Module   : Temperature and Humidity Sensor Module (DHT22x4)                 *
- *          : [Keyes] 4 Channel Relay (10A) with Optocoupler Module            *
- *          : [Keyes] Buzzer Module                                            *
- *          : Internal EEPROM 2Kb.                                             *
- *                                                                             *
- * Author   : Mr.Thongchai Artsamart [Bird Bird]                               *
+ *          : RealTimeClock Module                                             *
+ *          : SD card Module                                                   *
+ *          :                                                                  *
+ * Author   : Bavensky :3                                                      *
  * E-Mail   : Aphirak_Sang-ngenchai@hotmail.com                                *
  * Date     : 19/03/2014 [dd/mm/yyyy]                                          *
  *******************************************************************************/
@@ -54,7 +53,7 @@ int adc_key_in  = 0;
 int year0; int month0; int day0; int hour0; int minute0; int second0; // ตัวแปรฐานเวลา
 int temp1=0,humi1=0,temp2=0,humi2=0,temp3=0,humi3=0;                  // ตัวแปรเซ็นเซอร์
 int heater=2,water=1,fan=0;                                           // ตัวแปรเอาต์พุต
-int three,minutes,threehour=0,minutemode=3,i=0,s=0,t=0,m=0;           // ตัวแปรทั่วไป
+int three,minutes,threehour=3,minutemode=0,i=0,s=0,t=0,m=0;           // ตัวแปรทั่วไป
 
 void setup()
 {
@@ -128,6 +127,7 @@ void key()
   
   while(t==5)
   {
+    threehour=0;
     lcd.setCursor(0,0);lcd.print("Set Time        ");
     lcd.setCursor(0,1);lcd.print("  Time end: ");lcd.print(minutemode);lcd.print("m  ");
     lcd_key = read_LCD_buttons();
@@ -149,13 +149,14 @@ void mode1()
   lcd.setCursor(0,1);lcd.print("Mode 1 Disinfect");delay(2000);
   time();threehour = threehour+hour0;minutemode = minutemode+minute0;
   
-  if(threehour < 23|| minutemode < 59){i=8;}
-  if(threehour > 23 || minutemode > 59)
-      {
-        if(threehour > 23){ three = threehour - 24;} 
-        if(minutemode > 59){ minutes = minutemode - 60; three = threehour + 1;}
-        i=9;
-      }
+    if(threehour < 23|| minutemode < 59){i=8;}
+    if(threehour > 23 || minutemode > 59)
+    {
+      if(threehour > 23){ three = threehour - 24;} 
+      if(minutemode > 59){ minutes = minutemode - 60; three = threehour + 1;}
+      i=9;
+    }
+  
     
   while(i==8)
   {
@@ -194,7 +195,7 @@ void mode1()
     lcd.setCursor(0,1);lcd.print("   TEMP :");lcd.print(temp1);lcd.print("C    ");
     lcd_key = read_LCD_buttons(); 
     if(lcd_key==btnSELECT)
-    {delay(200);s=0;i=0;}
+    {delay(200);s=0;i=0;delay(1500);}
   }  
 }
 
