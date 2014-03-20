@@ -34,12 +34,12 @@ void setup()
  lcd.begin(16, 2);  
  Wire.begin();rtc.begin();
  pinMode(heater, OUTPUT); pinMode(water, OUTPUT); pinMode(fan, OUTPUT); 
- 
+ /*
  lcd.setCursor(0,0);
  lcd.print("RMUTL Electronic");delay(2000);
  lcd.setCursor(0,0);
  lcd.print("    Mushroom    ");
- delay(1000);
+ delay(1000);*/
  
 }
  
@@ -47,45 +47,67 @@ void loop()
 {
   lcd.setCursor(0,0);
   lcd.print("    Mushroom    ");
-  i=0;
-  time();
+  i=5;
   key();
-  choose();
+  
 }
-void choose()
-{
-  while(s==3)
-  {
-    s=1;
-    while(s==1)
+
+void key()
+{   
+   while(i==5) 
+   {i=1;
+    while(i==1)
     {
-      lcd.setCursor(0,1);lcd.print(">Start    Time  ");  
+      lcd.setCursor(0,1);lcd.print(">Mode1    Mode2 ");  
       lcd_key = read_LCD_buttons();   
       if( lcd_key==btnSELECT)
-      {mode1();}
+      {delay(200);s=5;i=0;}
       if(lcd_key==btnRIGHT)
-      {s=2;}
+      {delay(200);i=2;}
+    }
+    while(i==2)
+    {
+      lcd.setCursor(0,1);lcd.print(" Mode1   >Mode2 "); 
+      lcd_key = read_LCD_buttons();   
+      if(lcd_key==btnSELECT)
+      {mode2();i=0;}
+      if(lcd_key==btnLEFT)
+      {i=5;}
+    }
+   }
+  while(s==5)
+  {s=1;
+  while(s==1)
+    {
+      lcd.setCursor(0,1);lcd.print(">Start   SetTime");  
+      lcd_key = read_LCD_buttons();   
+      if( lcd_key==btnSELECT)
+      {delay(200);mode1();}
+      if(lcd_key==btnRIGHT)
+      {delay(200);s=2;}
     }
     while(s==2)
     {                              
-      lcd.setCursor(0,1);lcd.print(" Start   >Time  "); 
+      lcd.setCursor(0,1);lcd.print(" Start  >SetTime"); 
       lcd_key = read_LCD_buttons();   
       if(lcd_key==btnSELECT)
-      {lcd.setCursor(0,1);lcd.print("      TIME     ");}
+      {delay(200);lcd.setCursor(0,1);lcd.print("      TIME      ");delay(2000);s=5;}
       if(lcd_key==btnLEFT)
-      {s=1;}
-    } 
+      {delay(200);s=5;}
+    }
   }
+    
 }
+
 void mode1()
-{      
-  while(i=6)
-  {
+{   
+
   three=0;threehour=0;minutemode=0;minutes=0;
   threehour = 0;
-  minutemode = 5;
+  minutemode = 1;
   lcd.setCursor(0,1);lcd.print("Mode 1 Disinfect");delay(2000);
   time();threehour = threehour+hour0;minutemode = minutemode+minute0;
+  
   if(threehour < 23|| minutemode < 59){i=8;}
   if(threehour > 23 || minutemode > 59)
       {
@@ -93,6 +115,7 @@ void mode1()
         if(minutemode > 59){ minutes = minutemode - 60; three = threehour + 1;}
         i=9;
       }
+  
   
   while(i==8)
   {
@@ -124,15 +147,14 @@ void mode1()
       lcd.setCursor(0,1);lcd.print(" End Disinfect  ");delay(2000);i=7;}
   }
   
-  while(i==7)
+    while(i==7)
   {
     dht();
     lcd.setCursor(0,0);lcd.print("Mode1  Disinfect");
     lcd.setCursor(0,1);lcd.print("   TEMP :");lcd.print(temp1);lcd.print("C    ");
     lcd_key = read_LCD_buttons(); 
     if(lcd_key==btnSELECT)
-    {i=0;delay(2000);}
-  }
+    {delay(200);s=0;i=0;}
   }
   
 }
@@ -189,28 +211,6 @@ int read_LCD_buttons()
  if (adc_key_in < 555)  return btnLEFT; 
  if (adc_key_in < 790)  return btnSELECT;   
  return btnNONE; 
-}
-void key()
-{ 
-    i=1;
-    while(i==1)
-    {
-      lcd.setCursor(0,1);lcd.print(">Mode1    Mode2 ");  
-      lcd_key = read_LCD_buttons();   
-      if( lcd_key==btnSELECT)
-      {s=3;choose();i=0;}
-      if(lcd_key==btnRIGHT)
-      {i=2;}
-    }
-    while(i==2)
-    {
-      lcd.setCursor(0,1);lcd.print(" Mode1   >Mode2 "); 
-      lcd_key = read_LCD_buttons();   
-      if(lcd_key==btnSELECT)
-      {mode2();i=0;}
-      if(lcd_key==btnLEFT)
-      {i=1;}
-    }
 }
   
   /*
