@@ -1,21 +1,45 @@
+/*******************************************************************************
+ * Project  : Mushroom                                                         *
+ * Compiler : Arduino 1.0.2                                                    *
+ * Board    : Arduino UNO                                                      *
+ * Shield   : [DFROBOT] Arduino LCD Keypad Shield                              *
+ * Module   : Temperature and Humidity Sensor Module (DHT22x4)                 *
+ *          : [Keyes] 4 Channel Relay (10A) with Optocoupler Module            *
+ *          : [Keyes] Buzzer Module                                            *
+ *          : Internal EEPROM 2Kb.                                             *
+ *                                                                             *
+ * Author   : Mr.Thongchai Artsamart [Bird Bird]                               *
+ * E-Mail   : Aphirak_Sang-ngenchai@hotmail.com                                *
+ * Date     : 19/03/2014 [dd/mm/yyyy]                                          *
+ *******************************************************************************/
+/*******************************************************************************
+ * เรียกใช้งานไลบรารี่ต่างๆ                                                          *
+ *******************************************************************************/
 #include <Wire.h>
 #include "RTClib.h"
 #include <DHT22.h>
 #include <LiquidCrystal.h>
-LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 #include <stdio.h>
+/*******************************************************************************
+ * จอผลึกเหลว ใช้งานขาดิจิตอล 8,9,4,5,6และ7                                        *
+ *******************************************************************************/
+LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
+/*******************************************************************************
+ * ตัวตรวจรู้อุณหภูมิและความชื้น ใช้งานขาอนาล็อก A1,A2และA3                             *
+ *******************************************************************************/
 #define DHT22_PIN1 A1
 #define DHT22_PIN2 A2
 #define DHT22_PIN3 A3
 DHT22 myDHT1(DHT22_PIN1);
 DHT22 myDHT2(DHT22_PIN2);
 DHT22 myDHT3(DHT22_PIN3);
-
+/*******************************************************************************
+ * โมดูลฐานเวลาจริง ใช้งานขาอนาล็อก A4และA5                                         *
+ *******************************************************************************/
 RTC_DS1307 rtc;
-int year0; int month0; int day0; int hour0; int minute0; int second0;
-
-int temp1=0,humi1=0,temp2=0,humi2=0,temp3=0,humi3=0;
-
+/*******************************************************************************
+ * กำหนดใช้งานคีย์แพตในโมดูล DFRobot                                              *
+ *******************************************************************************/
 int lcd_key     = 0;
 int adc_key_in  = 0;
 #define btnRIGHT  0
@@ -24,23 +48,26 @@ int adc_key_in  = 0;
 #define btnLEFT   3
 #define btnSELECT 4
 #define btnNONE   5
-
-int heater=2,water=1,fan=0,i=0,s=0;
-
-int three,threehour,minutemode,minutes,m=0;
+/*******************************************************************************
+ * กำหนดตำแปรต่างในการเก็บค่า                                                     *
+ *******************************************************************************/
+int year0; int month0; int day0; int hour0; int minute0; int second0; // ตัวแปรฐานเวลา
+int temp1=0,humi1=0,temp2=0,humi2=0,temp3=0,humi3=0;                  // ตัวแปรเซ็นเซอร์
+int heater=2,water=1,fan=0;                                           // ตัวแปรเอาต์พุต
+int three,minutes,threehour=0,minutemode=3,i=0,s=0,t=0,m=0;           // ตัวแปรทั่วไป
 
 void setup()
 {
- lcd.begin(16, 2);  
- Wire.begin();rtc.begin();
- pinMode(heater, OUTPUT); pinMode(water, OUTPUT); pinMode(fan, OUTPUT); 
- /*
+ lcd.begin(16, 2);  Wire.begin();  rtc.begin();                          // เริ่มการทำงาน                                    
+ pinMode(heater, OUTPUT); pinMode(water, OUTPUT); pinMode(fan, OUTPUT);  // เอาต์พุต
+/*******************************************************************************
+* แสดงผลหน้าจอครั้งแรก                                                           *
+*******************************************************************************/
  lcd.setCursor(0,0);
  lcd.print("RMUTL Electronic");delay(2000);
  lcd.setCursor(0,0);
  lcd.print("    Mushroom    ");
- delay(1000);*/
- 
+ delay(1000);
 }
  
 void loop()
@@ -49,13 +76,13 @@ void loop()
   lcd.print("    Mushroom    ");
   i=5;
   key();
-  
 }
 
 void key()
 {   
    while(i==5) 
-   {i=1;
+   {
+     i=1;
     while(i==1)
     {
       lcd.setCursor(0,1);lcd.print(">Mode1    Mode2 ");  
@@ -75,8 +102,10 @@ void key()
       {i=5;}
     }
    }
+   
   while(s==5)
-  {s=1;
+  {
+    s=1;
   while(s==1)
     {
       lcd.setCursor(0,1);lcd.print(">Start   SetTime");  
@@ -91,20 +120,32 @@ void key()
       lcd.setCursor(0,1);lcd.print(" Start  >SetTime"); 
       lcd_key = read_LCD_buttons();   
       if(lcd_key==btnSELECT)
-      {delay(200);lcd.setCursor(0,1);lcd.print("      TIME      ");delay(2000);s=5;}
+      {delay(200);t=5;s=0;}
       if(lcd_key==btnLEFT)
       {delay(200);s=5;}
     }
   }
-    
+  
+  while(t==5)
+  {
+    lcd.setCursor(0,0);lcd.print("Set Time        ");
+    lcd.setCursor(0,1);lcd.print("  Time end: ");lcd.print(minutemode);lcd.print("m  ");
+    lcd_key = read_LCD_buttons();
+    if(lcd_key==btnUP)
+    {
+      delay(200);minutemode = minutemode+1;
+    }
+    if(lcd_key==btnDOWN)
+    {
+      delay(200);minutemode = minutemode-1;
+    }
+    if(lcd_key==btnSELECT)
+    {delay(200);t=0;i=0;s=0;;}
+  }    
 }
 
 void mode1()
 {   
-
-  three=0;threehour=0;minutemode=0;minutes=0;
-  threehour = 0;
-  minutemode = 1;
   lcd.setCursor(0,1);lcd.print("Mode 1 Disinfect");delay(2000);
   time();threehour = threehour+hour0;minutemode = minutemode+minute0;
   
@@ -115,8 +156,7 @@ void mode1()
         if(minutemode > 59){ minutes = minutemode - 60; three = threehour + 1;}
         i=9;
       }
-  
-  
+    
   while(i==8)
   {
     dht();time();
@@ -147,7 +187,7 @@ void mode1()
       lcd.setCursor(0,1);lcd.print(" End Disinfect  ");delay(2000);i=7;}
   }
   
-    while(i==7)
+  while(i==7)
   {
     dht();
     lcd.setCursor(0,0);lcd.print("Mode1  Disinfect");
@@ -155,8 +195,7 @@ void mode1()
     lcd_key = read_LCD_buttons(); 
     if(lcd_key==btnSELECT)
     {delay(200);s=0;i=0;}
-  }
-  
+  }  
 }
 
 void mode2()
@@ -182,14 +221,19 @@ void mode2()
   } 
   */
 }
+/*******************************************************************************
+* ลูปย่อยเริ่มการทำงานโมดูลฐานเวลาจริง                                                *
+*******************************************************************************/
 void time()
 {
   DateTime now = rtc.now(); 
   year0 = now.year(); month0 = now.month();   day0 = now.day();
   hour0 = now.hour(); minute0 = now.minute(); second0 = now.second();
-  DateTime future (now.unixtime() + 7 * 86400L + 30);
-  
+  DateTime future (now.unixtime() + 7 * 86400L + 30); 
 }
+/*******************************************************************************
+* ลูปย่อยเริ่มการทำงานตัวตรวจรู้                                                      *
+*******************************************************************************/
 void dht()
 { 
   DHT22_ERROR_t errorCode;
@@ -200,7 +244,9 @@ void dht()
   temp2 = myDHT2.getTemperatureC();humi2 = myDHT2.getHumidity();
   temp3 = myDHT3.getTemperatureC();humi3 = myDHT3.getHumidity();
 }
-
+/*******************************************************************************
+* ลูปย่อยเริ่มการทำงานปุ่มกดบนโมดูล DFRobot                                          *
+*******************************************************************************/
 int read_LCD_buttons()
 {
  adc_key_in = analogRead(0);     
@@ -212,21 +258,17 @@ int read_LCD_buttons()
  if (adc_key_in < 790)  return btnSELECT;   
  return btnNONE; 
 }
-  
-  /*
-  if( lcd_key==btnRIGHT)
-  {lcd.print("RIGHT ");}
-  if( lcd_key==btnLEFT)
-  {lcd.print("LEFT  ");}
-  if( lcd_key==btnUP)
-  {lcd.print("UP    ");}
-  if( lcd_key==btnDOWN)
-  {lcd.print("DOWN  ");}
-  if( lcd_key==btnSELECT)
-  {lcd.print("SELECT");}
-  if( lcd_key==btnNONE)
-  {lcd.print("NONE  ");}
-  */
+/*******************************************************************************
+* คำสั่งใช้งานปุ่มกดบนโมดูล DFRobot                                                 
+* lcd_key = read_LCD_buttons();         // อ่านค่าแรงดันที่ขาอนาล็อก A0             
+* lcd_key==btnRIGHT                     // ปุ่มขวา                               
+* lcd_key==btnLEFT                      // ปุ่มซ้าย                               
+* lcd_key==btnUP                        // ปุ่มบน                                
+* lcd_key==btnDOWN                      // ปุ่มล่าง                                
+* lcd_key==btnSELECT                    // ปุ่มเลือก                               
+* lcd_key==btnNONE                      // ไม่มีการกดปุ่ม                            
+********************************************************************************/
+
 
 
 
