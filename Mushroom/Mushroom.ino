@@ -53,7 +53,7 @@ int adc_key_in  = 0;
 int year0; int month0; int day0; int hour0; int minute0; int second0; // ตัวแปรฐานเวลา
 int temp1=0,humi1=0,temp2=0,humi2=0,temp3=0,humi3=0;                  // ตัวแปรเซ็นเซอร์
 int heater=2,water=1,fan=0;                                           // ตัวแปรเอาต์พุต
-int three,minutes,threehour=3,minutemode=0,i=0,s=0,t=0,m=0;           // ตัวแปรทั่วไป
+int three,minutes,threehour=0,minutemode=2,i=0,s=0,t=0,m=0;           // ตัวแปรทั่วไป
 
 void setup()
 {
@@ -201,26 +201,47 @@ void mode1()
 
 void mode2()
 {
-  lcd.setCursor(0,1);lcd.print(" Mode 2 Working ");delay(2000);i=0;
-  /*if(humi1 != humi2)
-  {
-    i=1;Serial.println(" Begin !!!");delay(1000);
-  }
-  while(i == 1)
+  lcd.setCursor(0,1);lcd.print(" Mode 2 Working ");delay(2000);
+  lcd.setCursor(0,0);lcd.print("Mode2 Working   ");
+  lcd.setCursor(0,1);lcd.print("CheckTemperature");delay(2000);
+  s=1;
+  while(s==1)
   {
     dht();
-    if(temp3<= 30 )
-    {digitalWrite(heater, HIGH);}
-    if(temp3 > 31)
-    {digitalWrite(heater, LOW);}
-    if(humi3<=80)
-    {digitalWrite(water, HIGH);}
-    if(humi3>81)
-    {digitalWrite(water, LOW);}
-    if(temp3>31 || humi3 >81)
-    {Serial.print(" END !!!");digitalWrite(heater, LOW);digitalWrite(water, LOW); i=0; }
-  } 
-  */
+    lcd.setCursor(0,0);lcd.print("TempL:");lcd.print(temp2);lcd.print("C ");lcd.print(humi2);lcd.print("%RH ");
+    lcd.setCursor(0,1);lcd.print("TempR:");lcd.print(temp3);lcd.print("C ");lcd.print(humi3);lcd.print("%RH ");
+    lcd_key = read_LCD_buttons(); 
+    if(lcd_key==btnSELECT)
+    {delay(200);s=0;i=0;}                  
+    if(temp2 != temp3 || humi2 != humi3)
+    {
+      delay(2000);
+      lcd.setCursor(0,0);lcd.print("     Working    ");
+      i=1;
+      while(i==1)
+      {  
+        dht();
+        lcd.setCursor(0,1);lcd.print("Temp:");lcd.print(temp3);lcd.print("C ");lcd.print(humi3);lcd.print("%RH ");
+        if(temp3 <= 30 )
+        {digitalWrite(heater, HIGH);}
+        if(temp3 >= 31)
+        {digitalWrite(heater, LOW);}
+        if(humi3 <= 80)
+        {digitalWrite(water, HIGH);digitalWrite(fan, LOW);}
+        if(humi3 >= 81)
+        {digitalWrite(water, LOW);digitalWrite(fan, HIGH);}
+        if(temp2 == temp3 && humi2 == humi3)
+        {
+          lcd.setCursor(0,1);lcd.print(" Mode 2 END work ");
+          digitalWrite(heater, LOW);digitalWrite(water, LOW);digitalWrite(fan, LOW);s=0;i=0; 
+        }
+        
+        lcd_key = read_LCD_buttons(); 
+        if(lcd_key==btnSELECT)
+        {delay(200);digitalWrite(heater, LOW);digitalWrite(water, LOW);digitalWrite(fan, LOW);s=0;i=0;}   
+      }
+    }
+  }
 }
 /*******************************************************************************
 * ลูปย่อยเริ่มการทำงานโมดูลฐานเวลาจริง                                                *
