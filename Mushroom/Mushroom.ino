@@ -19,6 +19,7 @@
 #include <DHT22.h>
 #include <LiquidCrystal.h>
 #include <stdio.h>
+#include <SD.h>
 /*******************************************************************************
  * จอผลึกเหลว ใช้งานขาดิจิตอล 8,9,4,5,6และ7                                        *
  *******************************************************************************/
@@ -36,6 +37,16 @@ DHT22 myDHT3(DHT22_PIN3);
  * โมดูลฐานเวลาจริง ใช้งานขาอนาล็อก A4และA5                                         *
  *******************************************************************************/
 RTC_DS1307 rtc;
+/******************************************************************************
+ * โมดูลบันทึกค่าลง SDCard + IC CD4050                                            *
+ * SDCard         Arduino          CD4050                                      *
+ *  CS              D3              15 - 14                                    *
+ *  MOSI            D11             12 - 11                                    *
+ *  SCK             D13             10 - 9                                     *
+ *  MISO            D12                -                                       *
+ *******************************************************************************/
+ File myFile;
+ const int chipSelect = 4;
 /*******************************************************************************
  * กำหนดใช้งานคีย์แพตในโมดูล DFRobot                                              *
  *******************************************************************************/
@@ -60,14 +71,24 @@ void setup()
 {
   lcd.begin(16, 2);  Wire.begin();  rtc.begin();                          // เริ่มการทำงาน                                    
   pinMode(heater, OUTPUT); pinMode(water, OUTPUT); pinMode(fan, OUTPUT);  // เอาต์พุต
-/*******************************************************************************
-* แสดงผลหน้าจอครั้งแรก                                                           *
-*******************************************************************************/
- lcd.setCursor(0,0);
- lcd.print("RMUTL Electronic");delay(2000);
- lcd.setCursor(0,0);
- lcd.print("    Mushroom    ");
- delay(1000);
+  pinMode(3, OUTPUT);
+  lcd.setCursor(0,0);lcd.print("RMUTL Electronic");delay(2000);
+  lcd.setCursor(0,0);lcd.print("    Mushroom    ");
+  time(); dht(); delay(1000);
+  
+  if (!SD.begin(chipSelect)){return;}
+  myFile = SD.open("Datalog.txt", FILE_WRITE);
+  if (myFile) 
+  {
+    myFile.println("Welcome to Temperature and Humidity Control for Mushroom");
+    myFile.println("      Datalog Temperature and Humidity");
+    myFile.print("Data / Time");myFile.print("                                 ");myFile.print("Temperaturemy");myFile.print("              ");myFile.print("Humidity");
+    myFile.print(day0);myFile.print('/');myFile.print(month0);myFile.print('/');myFile.print(year0);myFile.print(" & ");
+    myFile.print(hour0);myFile.print(':');myFile.print(minute0);myFile.print(':');myFile.print(second0);myFile.print(" minute");myFile.print("    ");
+    /*myFile.print("Temperaturemy : ");myFile.print(temp1);myFile.print("C "); myFile.print("  ");
+    myFile.print("Humidity : ");myFile.print(humi1);myFile.println("%RH ");*/
+    myFile.close(); 
+  }
 }
  
 void loop()
