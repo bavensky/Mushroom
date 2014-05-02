@@ -73,8 +73,8 @@
     pinMode(heater, OUTPUT); pinMode(water, OUTPUT); pinMode(fan, OUTPUT);  // เอาต์พุต
     pinMode(3, OUTPUT);
     lcd.setCursor(0,0);lcd.print("RMUTL Electronic");delay(2000);
-    lcd.setCursor(0,0);lcd.print("    Mushroom    ");
-    time(); dht(); delay(1000);
+    lcd.setCursor(0,0);lcd.print("    Mushroom    ");delay(1000);
+    time(); dht(); 
     
     if (!SD.begin(chipSelect)){return;}
     myFile = SD.open("Datalog.csv", FILE_WRITE);
@@ -107,15 +107,15 @@
       myFile.print(humi1);
       myFile.println("%RH");
       myFile.close(); 
-    }
+    }    
   }
    
   void loop()
   {
     lcd.setCursor(0,0);
     lcd.print("    Mushroom    ");
-    i=5;
-    key(); 
+    i=5; // goto Keycommand
+    key();
   }
   
   
